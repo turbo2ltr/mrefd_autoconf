@@ -1,0 +1,91 @@
+#!/bin/bash
+#
+# Copyright (c) 2020 by Thomas A. Early N7TAE
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Expects the following environment variables to be set
+# MREFD_CALLSIGN
+# MREFD_NB_OF_MODULES
+# MREFD_NB_OF_CLIENTS
+# MREFD_LISTEN_IPV4
+# MREFD_LISTEN_IPV6
+# MREFD_DEBUG
+
+rcfg='reflector.cfg'
+srch='configure.h'
+srcm='configure.mk'
+
+# default values
+callsign_d='CHNGME'
+nummod_d=26
+mclients_d=false
+ip4addr_d='none'
+ip6addr_d='none'
+dbsupport_d=false
+
+
+WriteMemFile ()
+{
+	local file
+	file="$rcfg"
+	echo "# created on `date`"                                  > $file
+	[ -z ${MREFD_CALLSIGN+x}    	] || echo   "callsign='$MREFD_CALLSIGN'"  	>> $file
+	[ -z ${MREFD_NB_OF_MODULES+x}   ] || echo   "nummod=$MREFD_NB_OF_MODULES"   >> $file
+	[ -z ${MREFD_NB_OF_CLIENTS+x}   ] || echo   "mclients=$MREFD_NB_OF_CLIENTS" >> $file
+	[ -z ${MREFD_LISTEN_IPV4+x}     ] || echo   "ip4addr='$MREFD_LISTEN_IPV4'"  >> $file
+	[ -z ${MREFD_LISTEN_IPV6+x}     ] || echo   "ipv6addr='$MREFD_LISTEN_IPV6'"  >> $file
+	[ -z ${MREFD_DEBUG+x}   		] || echo   "dbsupport=$MREFD_DEBUG"   		>> $file
+}
+
+WriteSRCHFile ()
+{
+	local file m
+	file="$srch"
+	echo "// Created on `date`" > $file
+	echo "#define CALLSIGN \"${MREFD_CALLSIGN}\"" >> $file
+	if [ -z ${nummod+x} ]; then
+		echo "#define NB_OF_MODULES ${nummod_d}" >> $file
+	else
+		echo "#define NB_OF_MODULES ${MREFD_NB_OF_MODULES}" >> $file
+	fi
+	if [ ! -z ${MREFD_LISTEN_IPV4+x} ]; then
+		echo "#define LISTEN_IPV4 \"${MREFD_LISTEN_IPV4}\"" >> $file
+	fi
+	if [ ! -z ${MREFD_LISTEN_IPV6+x} ]; then
+		echo "#define LISTEN_IPV6 \"${MREFD_LISTEN_IPV6}\"" >> $file
+	fi
+	if [ ! -z ${MREFD_NB_OF_CLIENTS+x} ]; then
+		if [[ "$MREFD_NB_OF_CLIENTS" == "true" ]]; then
+			echo "#define MREFD_NB_OF_CLIENTS" >> $file
+		fi
+	fi
+}
+
+WriteSRCMKFile ()
+{
+	local file
+	file="$srcm"
+	echo "# Created on `date`" > $file
+	if [ -z ${MREFD_DEBUG+x} ]; then
+		echo "debug = $dbsupport_d" >> $file
+	else
+		echo "debug = $MREFD_DEBUG" >> $file
+	fi
+}
+
+
+WriteMemFile
+WriteSRCHFile
+WriteSRCMKFile
