@@ -15,13 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Expects the following environment variables to be set
+# Uses the following environment variables 
 # MREFD_CALLSIGN
 # MREFD_NB_OF_MODULES
 # MREFD_NB_OF_CLIENTS
 # MREFD_LISTEN_IPV4
 # MREFD_LISTEN_IPV6
 # MREFD_DEBUG
+
+# The following three vars should have multiple values separated by a comma
+# MREFD_BLACKLIST		
+# MREFD_WHITELIST
+# MREFD_INTERLINK
+
 
 rcfg='reflector.cfg'
 srch='configure.h'
@@ -34,6 +40,13 @@ mclients_d=false
 ip4addr_d='none'
 ip6addr_d='none'
 dbsupport_d=false
+
+
+cd ~
+rm -rf ~/mrefd
+git clone https://github.com/n7tae/mrefd.git
+cd ~/mrefd
+
 
 
 WriteMemFile ()
@@ -89,3 +102,48 @@ WriteSRCMKFile ()
 WriteMemFile
 WriteSRCHFile
 WriteSRCMKFile
+
+# extract whitelist, blacklist, and interlink
+
+cp config/mrefd.whitelist .
+
+if [ ! -z ${MREFD_WHITELIST+x} ]; then
+	readarray -d "," -t strarr <<< "$MREFD_WHITELIST"
+	for (( n=0; n < ${#strarr[*]}; n++))
+	do
+		echo "${strarr[n]}" >> mrefd.whitelist
+	done
+fi
+
+cp config/mrefd.blacklist .
+
+if [ ! -z ${MREFD_BLACKLIST+x} ]; then
+	readarray -d "," -t strarr <<< "$MREFD_BLACKLIST"
+	for (( n=0; n < ${#strarr[*]}; n++))
+	do
+		echo "${strarr[n]}" >> mrefd.blacklist
+	done
+fi
+
+cp config/mrefd.interlink .
+
+if [ ! -z ${MREFD_INTERLINK+x} ]; then
+	readarray -d "," -t strarr <<< "$MREFD_INTERLINK"
+	for (( n=0; n < ${#strarr[*]}; n++))
+	do
+		echo "${strarr[n]}" >> mrefd.interlink
+	done
+fi
+
+# make some directories that the installer assumes to be there
+mkdir /usr/local/etc
+mkdir /etc/systemd/
+mkdir /etc/systemd/system/
+
+# make and install
+make
+make install
+
+# the install will fail because no systemctl, and it can't start the service
+# so we will start it ourselves.
+~/mrefd/mrefd 
