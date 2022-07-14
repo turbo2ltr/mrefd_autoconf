@@ -14,7 +14,7 @@ Though it shouldn't matter, I use Portainer for managing my containers so YMMV
 The script takes the following actions:
 * Deletes any previous git clone and built configuration of mrefd
 * Clones mrefd project
-* Uses the environment variables from `docker-compose` to create the three config files `reconfig` usually makes
+* Uses the environment variables from `docker-compose` to create the three config files `rconfig` usually makes
 * Copies over the whitelist, blacklist, and interlink default files (as per the mrefd instructions)
 * Uses the respective comma separated values in the Docker environment variables to append lines to each of the files as needed
 * Creates some folders that are not present in the Alpine image due to missing services, so that the installer doesn't error out
